@@ -669,6 +669,30 @@ function rescheduleToTomorrow(id) {
   showToast('Moved to tomorrow');
 }
 
+function rescheduleToToday(id) {
+  var t = tasks.find(function(task) { return task.id === id; });
+  if (!t) return;
+  var today = new Date();
+  if (t.deadline) {
+    var dl = new Date(t.deadline);
+    today.setHours(dl.getHours(), dl.getMinutes(), 0, 0);
+  } else {
+    today.setHours(23, 59, 0, 0);
+  }
+  t.deadline = today.toISOString();
+  saveTasks();
+  renderTasks();
+  showToast('Moved to today');
+}
+
+function isFutureTask(t) {
+  if (!t || !t.deadline) return false;
+  var dl = new Date(t.deadline);
+  var now = new Date();
+  var todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  return dl > todayEnd;
+}
+
 function clearCompleted() {
   var cleared = tasks.filter(function(t) { return t.completed; });
   if (cleared.length === 0) return;
@@ -764,20 +788,45 @@ function attachGestureListeners(li, taskId) {
           }, 300);
         } else {
           swipeEl.style.transform = 'translateX(100%)';
-          setTimeout(function() { rescheduleToTomorrow(taskId); }, 300);
+          var task = tasks.find(function(t) { return t.id === taskId; });
+          if (task && isFutureTask(task)) {
+            setTimeout(function() { rescheduleToToday(taskId); }, 300);
+          } else {
+            setTimeout(function() { rescheduleToTomorrow(taskId); }, 300);
+          }
         }
       } else {
         swipeEl.style.transform = 'translateX(0)';
       }
     });
   } else {
-    // Desktop: hover action buttons
+    // Desktop: hover action buttons (all static content, no user input)
     var actions = document.createElement('div');
     actions.className = 'task-item__hover-actions';
-    actions.innerHTML =
-      '<button class="hover-action hover-action--edit" data-action="edit" title="Edit">&#9998;</button>' +
-      '<button class="hover-action hover-action--tomorrow" data-action="tomorrow" title="Move to tomorrow">&#8594;</button>' +
-      '<button class="hover-action hover-action--delete" data-action="delete" title="Delete">&times;</button>';
+    var taskRef = tasks.find(function(t) { return t.id === taskId; });
+    var isFuture = taskRef && isFutureTask(taskRef);
+
+    var editBtn = document.createElement('button');
+    editBtn.className = 'hover-action hover-action--edit';
+    editBtn.dataset.action = 'edit';
+    editBtn.title = 'Edit';
+    editBtn.textContent = '\u270E';
+
+    var rescheduleBtn = document.createElement('button');
+    rescheduleBtn.className = 'hover-action hover-action--tomorrow';
+    rescheduleBtn.dataset.action = 'reschedule';
+    rescheduleBtn.title = isFuture ? 'Move to today' : 'Move to tomorrow';
+    rescheduleBtn.textContent = isFuture ? '\u2190 Today' : 'Tomorrow \u2192';
+
+    var deleteBtn = document.createElement('button');
+    deleteBtn.className = 'hover-action hover-action--delete';
+    deleteBtn.dataset.action = 'delete';
+    deleteBtn.title = 'Delete';
+    deleteBtn.textContent = '\u00D7';
+
+    actions.appendChild(editBtn);
+    actions.appendChild(rescheduleBtn);
+    actions.appendChild(deleteBtn);
     swipeEl.appendChild(actions);
 
     actions.addEventListener('click', function(e) {
@@ -786,7 +835,10 @@ function attachGestureListeners(li, taskId) {
       e.stopPropagation();
       var action = btn.dataset.action;
       if (action === 'edit') openEditModal(taskId);
-      else if (action === 'tomorrow') rescheduleToTomorrow(taskId);
+      else if (action === 'reschedule') {
+        if (isFuture) rescheduleToToday(taskId);
+        else rescheduleToTomorrow(taskId);
+      }
       else if (action === 'delete') deleteTask(taskId);
     });
   }
@@ -1080,9 +1132,10 @@ function renderTasks() {
 
     var priorityDot = '<span class="priority-dot priority-dot--' + t.priority + '"></span>';
 
+    var swipeRightLabel = isFutureTask(t) ? '\u2190 Today' : 'Tomorrow \u2192';
     li.innerHTML =
       '<div class="task-item__action-left">&#10003; Complete</div>' +
-      '<div class="task-item__action-right">Tomorrow &#8594;</div>' +
+      '<div class="task-item__action-right">' + swipeRightLabel + '</div>' +
       '<div class="task-item__swipe">' +
       '<input type="checkbox" class="task-item__checkbox"' + (t.completed ? ' checked' : '') + '>' +
       '<div class="task-item__content">' +

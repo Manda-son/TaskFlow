@@ -12,7 +12,7 @@ This plan details the transformation of TaskFlow from a standard to-do list into
   - **Today** (Star icon): Default view. Shows only tasks due today or overdue.
   - **Add (+) ** (Big center button): Floating Action Button (FAB) style.
   - **All** (List icon): Infinite scroll list of all tasks.
-- **Header Removal**: Remove the large "TaskFlow" header. Replace with a minimal, dynamic header that changes based on the view (e.g., "Good Morning, Manda" or just "Today").
+- **Header Removal**: Remove the large "TaskFlow" header. Replace with a minimal, dynamic header that changes based on the view (e.g., "You can do everything you put your mind to" or just "Today").
 - **Visuals**:
   - Remove all borders from input fields.
   - Use whitespace to separate tasks instead of lines/boxes.
