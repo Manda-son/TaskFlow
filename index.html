@@ -1,15 +1,18 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="TaskFlow — A clean, minimalist to-do list app to organize your tasks.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="TaskFlow — A minimal, gesture-driven productivity app.">
+  <meta name="theme-color" content="#0a0a0b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>TaskFlow</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -17,129 +20,146 @@
 
   <div class="app" id="app">
 
-    <!-- HEADER -->
-    <header class="header">
-      <div class="header__left">
-        <h1 class="header__title">TaskFlow</h1>
-        <p class="header__subtitle">You can do everything you put your mind to.</p>
-      </div>
-      <div class="header__actions">
-        <button class="header__btn" id="theme-toggle" title="Toggle theme">
-          <span id="theme-icon">&#9790;</span>
-        </button>
-        <button class="header__btn" id="shortcuts-btn" title="Keyboard shortcuts (?)">?</button>
-        <button class="header__btn" id="export-btn" title="Export tasks">&#8681;</button>
-        <label class="header__btn" id="import-label" title="Import tasks">&#8679;
-          <input type="file" id="import-input" accept=".json" hidden>
-        </label>
-      </div>
+    <!-- GREETING HEADER -->
+    <header class="greeting" id="greeting">
+      <p class="greeting__time" id="greeting-time">Good Morning</p>
+      <p class="greeting__date" id="greeting-date"></p>
     </header>
 
-    <!-- SEARCH BAR -->
-    <div class="search-bar">
-      <input type="text" class="search-bar__input" id="search-input" placeholder="Search tasks... ( / )" autocomplete="off">
+    <!-- SEARCH (All view only) -->
+    <div class="search" id="search-container">
+      <svg class="search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/>
+      </svg>
+      <input type="text" class="search__input" id="search-input" placeholder="Search tasks..." autocomplete="off">
     </div>
-
-    <!-- TASK INPUT FORM -->
-    <form class="task-form" id="task-form">
-      <div class="task-form__main">
-        <input type="text" class="task-form__input" id="task-input" placeholder="What needs to be done? (n)"
-          autocomplete="off" required>
-        <select class="task-form__priority" id="priority-select">
-          <option value="low">Low</option>
-          <option value="medium" selected>Medium</option>
-          <option value="high">High</option>
-        </select>
-        <button type="submit" class="task-form__button" id="add-button">Add</button>
-      </div>
-      <div class="task-form__extra">
-        <div class="custom-datepicker" id="custom-datepicker">
-          <div class="deadline-wrapper">
-            <input type="text" class="task-form__deadline" id="deadline-display" placeholder="Set deadline..." readonly>
-            <button type="button" class="deadline-clear" id="deadline-clear" title="Clear deadline">&times;</button>
-          </div>
-          <input type="hidden" id="deadline-input">
-
-          <div class="calendar-picker" id="calendar-picker">
-            <div class="calendar-header">
-              <button type="button" class="calendar-btn" id="prev-month">&#10094;</button>
-              <div class="calendar-title" id="calendar-title">Month Year</div>
-              <button type="button" class="calendar-btn" id="next-month">&#10095;</button>
-            </div>
-            <div class="calendar-weekdays">
-              <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-            </div>
-            <div class="calendar-days" id="calendar-days"></div>
-            <div class="calendar-time">
-              <span class="calendar-time-label">Time:</span>
-              <input type="time" id="calendar-time-input" value="12:00">
-            </div>
-            <div class="calendar-footer">
-              <button type="button" class="calendar-confirm" id="confirm-deadline">Apply</button>
-            </div>
-          </div>
-        </div>
-        <input type="text" class="task-form__details" id="details-input"
-          placeholder="Add details or comments (optional)...">
-      </div>
-      <div class="task-form__tags">
-        <input type="text" class="task-form__tags-input" id="tags-input"
-          placeholder="Tags (comma separated, e.g. Work, Personal)...">
-      </div>
-    </form>
 
     <!-- TAG FILTERS -->
     <div class="tag-filters" id="tag-filters"></div>
 
-    <!-- FILTER & SORT BAR -->
-    <div class="controls">
-      <div class="filters" id="filters">
-        <button class="filters__button filters__button--active" data-filter="all">All</button>
-        <button class="filters__button" data-filter="active">Active</button>
-        <button class="filters__button" data-filter="completed">Completed</button>
+    <!-- PROGRESS INDICATOR -->
+    <div class="progress" id="progress-container">
+      <div class="progress__bar">
+        <div class="progress__fill" id="progress-bar"></div>
       </div>
+      <span class="progress__text" id="progress-text"></span>
+    </div>
 
-      <div class="sort-container">
-        <label for="sort-select" class="sort-label">Sort by:</label>
-        <select class="sort-select" id="sort-select">
-          <option value="date-added">Newest</option>
-          <option value="priority">Priority</option>
-          <option value="urgency">Urgency</option>
-          <option value="manual">Manual</option>
-        </select>
-      </div>
+    <!-- SORT BAR -->
+    <div class="sort-bar" id="sort-bar">
+      <span class="sort-bar__label">Sort</span>
+      <select class="sort-bar__select" id="sort-select">
+        <option value="priority">Priority</option>
+        <option value="date-added">Date Added</option>
+        <option value="deadline">Deadline</option>
+      </select>
     </div>
 
     <!-- TASK LIST -->
     <ul class="task-list" id="task-list"></ul>
 
-    <!-- FOOTER -->
-    <footer class="footer" id="footer">
-      <div class="footer__left">
-        <span class="footer__count" id="task-count">0 tasks remaining</span>
-        <div class="footer__progress">
-          <div class="footer__progress-bar" id="progress-bar"></div>
-        </div>
-        <span class="footer__progress-text" id="progress-text"></span>
-      </div>
-      <button class="footer__clear" id="clear-completed">Clear completed</button>
-    </footer>
-
   </div>
 
-  <!-- TOAST CONTAINER -->
-  <div class="toast-container" id="toast-container"></div>
+  <!-- BOTTOM SHEET OVERLAY -->
+  <div class="sheet-overlay" id="sheet-overlay"></div>
+
+  <!-- BOTTOM SHEET (Quick Add) -->
+  <div class="sheet" id="sheet">
+    <div class="sheet__handle"></div>
+    <form class="sheet__form" id="sheet-form" autocomplete="off">
+      <input type="text" class="sheet__input" id="sheet-task-input"
+        placeholder="What needs to be done?" autofocus>
+      <div class="sheet__parsed" id="sheet-parsed"></div>
+      <div class="sheet__options">
+        <div class="sheet__priority-group">
+          <button type="button" class="sheet__priority-btn sheet__priority-btn--low" data-priority="low" title="Low priority">
+            <span class="priority-dot priority-dot--low"></span>
+          </button>
+          <button type="button" class="sheet__priority-btn sheet__priority-btn--medium sheet__priority-btn--active" data-priority="medium" title="Medium priority">
+            <span class="priority-dot priority-dot--medium"></span>
+          </button>
+          <button type="button" class="sheet__priority-btn sheet__priority-btn--high" data-priority="high" title="High priority">
+            <span class="priority-dot priority-dot--high"></span>
+          </button>
+        </div>
+        <button type="button" class="sheet__date-btn" id="sheet-date-btn" title="Set deadline">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20">
+            <rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/>
+          </svg>
+        </button>
+        <button type="submit" class="sheet__submit" id="sheet-submit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+      <!-- Calendar picker inside sheet -->
+      <div class="calendar" id="sheet-calendar">
+        <div class="calendar__nav">
+          <button type="button" class="calendar__nav-btn" id="prev-month">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <span class="calendar__title" id="calendar-title"></span>
+          <button type="button" class="calendar__nav-btn" id="next-month">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+        <div class="calendar__weekdays">
+          <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+        </div>
+        <div class="calendar__days" id="calendar-days"></div>
+        <div class="calendar__time">
+          <label class="calendar__time-label">Time</label>
+          <input type="time" class="calendar__time-input" id="calendar-time-input" value="09:00">
+        </div>
+        <button type="button" class="calendar__apply" id="confirm-deadline">Apply</button>
+      </div>
+    </form>
+  </div>
 
   <!-- MODAL OVERLAY -->
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal" id="modal">
       <div class="modal__header">
         <h2 class="modal__title" id="modal-title"></h2>
-        <button class="modal__close" id="modal-close">&times;</button>
+        <button class="modal__close" id="modal-close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
       </div>
       <div class="modal__body" id="modal-body"></div>
     </div>
   </div>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- BOTTOM NAVIGATION -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="bottom-nav__btn bottom-nav__btn--active" id="nav-toggle">
+      <!-- Today icon (star) — shown when viewing "today" -->
+      <svg class="nav-icon nav-icon--today" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      </svg>
+      <!-- All icon (list) — shown when viewing "all" -->
+      <svg class="nav-icon nav-icon--all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22" style="display:none">
+        <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+      </svg>
+      <span class="bottom-nav__label" id="nav-toggle-label">Today</span>
+    </button>
+    <button class="bottom-nav__fab" id="fab-add" title="Add task">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="28" height="28">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+    </button>
+    <button class="bottom-nav__btn" id="nav-settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+      </svg>
+      <span class="bottom-nav__label">Settings</span>
+    </button>
+  </nav>
 
   <script src="app.js"></script>
 
