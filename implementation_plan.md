@@ -1,74 +1,89 @@
-# TaskFlow Minimalist Overhaul Plan
+# TaskFlow: Life RPG Transformation Plan
 
-This plan details the transformation of TaskFlow from a standard to-do list into a competitive, minimalist, mobile-first productivity application. The goal is to reduce visual weight, improve interaction speed, and focus on "Today" vs. "Everything else".
+This plan outlines the evolution of TaskFlow from a minimalist to-do list into a **gamified accountability engine**. The core philosophy shifts from "managing tasks" to "leveling up your life" through strict consistency and quantified self-tracking.
 
-- **Vanilla JS**: Confirmed. We will use vanilla JavaScript for all interactions, including gestures, to maintain a lightweight footprint without external dependencies.
+## Data Structure
+**Confirmed**: We are moving from a flat task list to a hierarchical `Goal -> Daily Quest` system.
+**Strict Mode**: The app will enforce a "Day" concept based on the user's wake/sleep cycle.
+
+## Concept: The "Life RPG" System
+
+### 1. Macro Goals (The "Skill Trees")
+Instead of generic lists, the user defines top-level **Macro Goals**.
+*   **Example**: Gym, Study, Business.
+*   **Mechanic**: Each goal has a **Level** and **XP Bar**.
+*   **Visual**: Large cards on the "Home" tab showing current level and progress (e.g., "Gym - Lvl 12").
+
+### 2. Micro Quests (The "Daily Grind")
+Daily actions that feed into Macro Goals.
+*   **Types**:
+    *   *Boolean*: "Go to Gym" (Yes/No).
+    *   *Quantifiable*: "Calories" (Input: 2150 / Target: 2150), "Water" (Input: 1.5L / Target: 2L).
+*   **Mechanic**: Completing a quest grants XP to the specific Macro Goal it belongs to.
+
+### 3. The "Game Clock" (Time Management)
+*   **Inputs**: User sets **Wake Up Time** and **Bedtime**.
+*   **Display**: A prominent "Action Points Remaining" or "Time Left" countdown in the UI, calculated from *Current Time* to *Bedtime*.
+*   **Psychology**: Creates urgency to finish quests before the "server reset" (sleep).
+
+### 4. Gamification & Accountability
+*   **Streaks**: Global streak for days with >80% completion.
+*   **Anti-Void**: Visual alerts (color shifts) when time is running out and progress is low.
+*   **Daily Recap**: A "Level Complete" screen at bedtime showing XP gained.
 
 ## Proposed Changes
 
-### 1. UI Redesign: The "Lightweight" Feel
-**Files**: `index.html`, `style.css`
-- **Bottom Navigation**: Replace the current top-heavy header/filter bar with a fixed bottom navigation bar containing:
-  - **Today** (Star icon): Default view. Shows only tasks due today or overdue.
-  - **Add (+) ** (Big center button): Floating Action Button (FAB) style.
-  - **All** (List icon): Infinite scroll list of all tasks.
-- **Header Removal**: Remove the large "TaskFlow" header. Replace with a minimal, dynamic header that changes based on the view (e.g., "You can do everything you put your mind to" or just "Today").
-- **Visuals**:
-  - Remove all borders from input fields.
-  - Use whitespace to separate tasks instead of lines/boxes.
-  - Subtle shadows for depth (neumorphism-lite or material design).
-  - **Auto Dark/Light Theme**: Use system preference query (`prefers-color-scheme`) by default, with an optional toggle hidden in settings.
+### 1. Data Model (`app.js`)
+*   **New `Goal` Class**: `{ id, title, level, currentXP, nextLevelXP, color }`
+*   **Enhanced `Task` Class**:
+    *   `type`: 'checkbox' | 'counter'
+    *   `targetValue`: (e.g., 2150)
+    *   `currentValue`: (e.g., 1400)
+    *   `parentId`: Links to Macro Goal
+    *   `xpReward`: Amount of XP granted on completion.
 
-### 2. Interaction Model: Quick & Fluid
-**Files**: `app.js`, `style.css`
-- **Floating Quick Add**:
-  - Clicking the bottom "+" opens a modal or bottom sheet (slide-up).
-  - **Natural Language Input**: The input field will listen for keywords like "tomorrow", "next friday", "at 6pm".
-  - **Mini parsing logic**: We will implement a Regex-based parser in `app.js` to extract dates/times from the text automatically.
-- **Gestures**:
-  - **Swipe Right**: Reschedule task (e.g., move to Tomorrow).
-  - **Swipe Left**: Complete task (move to bottom/fade) or Delete.
-  - **Long Press**: Trigger "Edit Mode" (open modal to edit text) or "Selection Mode" (multi-select to delete).
-- **Checkbox**:
-  - Make checkboxes larger and circular (Apple Reminders style).
-  - Animation: On check, the task text strikethroughs and gently slides down or fades.
+### 2. UI Overhaul (`index.html`, `style.css`)
+*   **Home Tab (Character Sheet)**:
+    *   Top: "Time Left Today" Progress Bar (Visualizing the Wake-Sleep window).
+    *   Body: Macro Goal Cards with Level & Progress Bars.
+*   **Quests Tab (The Log)**:
+    *   List of today's Micro Quests grouped by Goal.
+    *   Swipe right to complete (or tap to enter numbers).
+*   **Settings**:
+    *   Bedtime / Wake Up time configuration.
 
-### 3. Core Logic & Data Structure
-**Files**: `app.js`
-- **Date Management**:
-  - Every task needs a `dueDate` property (timestamp) to sort into "Today" vs "Later".
-  - Logic to auto-move overdue tasks to "Today".
-- **Priorities**:
-  - Visuals: Small colored dot or side border (Red=High, Orange=Med, Blue=Low/None). No large badges.
-- **Subtasks**:
-  - Display progress (e.g., "1/3") on the main list item.
-  - In detail view (long press), show nested checkboxes.
-- **Offline & Sync**:
-  - LocalStorage is already implemented. We will optimize `saveTasks()` to be debounced and robust.
-  - Add "Export to JSON" as a hidden option in a "Settings" slide-out menu (swipe left from edge?).
+### 3. Logic & Persistence
+*   **Midnight/Bedtime Reset**: Logic to auto-reset daily quests for the next day while keeping the Macro Goal progress.
+*   **XP Calculation**: Simple formula (e.g., `Level * 100 XP` to advance).
+
+## Comparison: Current vs. New
+
+| Feature | Current TaskFlow | Life RPG Vision |
+| :--- | :--- | :--- |
+| **Structure** | Flat list of tasks with tags | **Hierarchical**: Macro Goal -> Micro Daily Quests |
+| **Input** | Text + Checkbox | **Quantifiable**: Text + Numeric Inputs + Validation |
+| **Timing** | Simple Deadlines | **Game Clock**: Countdown based on rigid sleep schedule |
+| **Progress** | List gets smaller | **Growth**: XP Bars fill up, Levels increase |
+| **Vibe** | Minimalist Tool | **Gamified Dashboard** |
 
 ## Phased Implementation Roadmap
 
-### Phase 1: MVP (The "Feel")
-- [ ] Refactor HTML structure to Bottom Tab Layout.
-- [ ] Implement the "Today" vs "All" view logic.
-- [ ] CSS Overhaul: Whitespace, typography, remove heavy borders.
-- [ ] Add the Floating Action Button (FAB) for new tasks.
+### Phase 1: The Core Loop (Goals & Quests)
+- [ ] Define Goals (Gym, Study, Business) in code/storage.
+- [ ] Create "Daily Quest" creation UI with numeric targets.
+- [ ] Implement XP gain logic (Task completion -> Goal XP).
 
-### Phase 2: Smart Input & Gestures
-- [ ] Implement Natural Language Processing for dates (Regex based).
-- [ ] Add Touch Event listeners for Swipe (Left/Right) gestures.
-- [ ] Add Long-press detection for Edit.
+### Phase 2: The Timekeeper
+- [ ] Implement Bedtime/Wake Up settings.
+- [ ] Create the "Time Remaining" visualization (Countdown bar).
 
-### Phase 3: Polish & Essentials
-- [ ] Refine Animations (Task completion, page transitions).
-- [ ] Implement Subtasks listing in detail view.
-- [ ] Add "Tags" as simple clickable pills in the edit view.
-- [ ] Local Push Notifications (using Notification API).
+### Phase 3: The Polish (Visuals)
+- [ ] Design "Level Up" animations.
+- [ ] Create specific icons/themes for each Goal.
+- [ ] Implement the "Streak" flame logic.
 
 ## Verification Plan
 ### Manual Verification
-- **Mobile Emulation**: Test swipe gestures using Chrome DevTools mobile emulator.
-- **NLP Testing**: Input "Walk dog tomorrow at 5pm" -> Verify task is created with correct due date and time.
-- **Theme Testing**: Toggle system dark mode preference and verify app adapts instantly.
-- **Performance**: Ensure "All Tasks" list scrolls smoothly with 50+ items.
+- **XP Check**: Complete 3 "Gym" quests -> Verify "Gym" XP bar increases.
+- **Reset Logic**: Manually trigger "New Day" function -> Verify quests reset but XP remains.
+- **Clock Check**: Change system time to 1 hour before bedtime -> Verify UI warns of "Low Time".
